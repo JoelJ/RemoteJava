@@ -40,18 +40,38 @@ public class ReloadableClassLoaderTest {
 
 	@Test
 	public void testReloading() throws Exception {
-		switchToVersion1();
-
 		URL[] urls = {testFile.toURI().toURL()};
 		ReloadableClassLoader reloadableClassLoader = ReloadableClassLoader.classLoaderFor(urls);
+
+		switchToVersion1();
 		String version1 = invoke(reloadableClassLoader);
 		Assert.assertEquals("version1", version1);
 
 		switchToVersion2();
 		reloadableClassLoader.reload();
-
 		String version2 = invoke(reloadableClassLoader);
 		Assert.assertEquals("version2", version2);
+
+		switchToVersion1();
+		reloadableClassLoader.reload();
+		String version1Again = invoke(reloadableClassLoader);
+		Assert.assertEquals("version1", version1Again);
+	}
+
+	@Test
+	public void testReloadingEquals() throws Exception {
+		URL[] urls = {testFile.toURI().toURL()};
+		ReloadableClassLoader reloadableClassLoader = ReloadableClassLoader.classLoaderFor(urls);
+
+		switchToVersion1();
+		reloadableClassLoader.reload();
+		Class<?> testClass1 = reloadableClassLoader.loadClass("TestClass");
+
+		switchToVersion2();
+		reloadableClassLoader.reload();
+		Class<?> testClass2 = reloadableClassLoader.loadClass("TestClass");
+
+		Assert.assertFalse(testClass1 == testClass2);
 	}
 
 	private void switchToVersion1() throws IOException {
